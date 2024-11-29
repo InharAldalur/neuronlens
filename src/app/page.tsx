@@ -35,7 +35,7 @@ export default function LandingPage() {
 								alt='ViewVolt logo'
 								className='w-48 mb-6'
 							/>
-							<h1 className='text-6xl font-bold leading-tighter tracking-tighter '>
+							<h1 className='text-5xl font-bold leading-tighter tracking-tighter '>
 								Save time watching youtube smarter
 							</h1>
 							<p className='text-xl mt-3 text-white/80'>
