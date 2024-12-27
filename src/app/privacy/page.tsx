@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
 					<p className='mb-4'>
 						All payment processing is handled by Stripe. We do not store your
 						payment information on our servers. Your payment data is processed
-						securely through Stripe's infrastructure.
+						securely through Stripe´s infrastructure.
 					</p>
 				</section>
 
