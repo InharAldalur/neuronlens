@@ -43,7 +43,10 @@ export default function LandingPage() {
 								ratings.
 							</p>
 							<SignedOut>
-								<SignInButton mode='modal'>
+								<SignInButton
+									mode='modal'
+									signUpFallbackRedirectUrl='https://lens.neuroneleven.com'
+								>
 									<button className='bg-gray-800/50 hover:bg-gray-800/60 font-bold text-white py-4 px-10 rounded-full backdrop-blur-2xl mt-6 flex items-center gap-2'>
 										<Chrome size={20} />
 										Get the extension
