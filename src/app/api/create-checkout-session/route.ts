@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
 				},
 			],
 			mode: 'subscription',
+			subscription_data: {
+				trial_period_days: 7,
+			},
 			success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
 			cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
 			client_reference_id: userId,
