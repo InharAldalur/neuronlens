@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 			payment_method_types: ['card'],
 			line_items: [
 				{
-					price: 'price_1Q3ybZA4yMpTDmkKCNWQcyNy', // Replace with your actual Price ID
+					price: 'price_1QS3wwA4yMpTDmkKbWgk8xQI', // Replace with your actual Price ID
 					quantity: 1,
 				},
 			],
