@@ -39,8 +39,8 @@ export default function LandingPage() {
 								Save time watching youtube smarter
 							</h1>
 							<p className='text-xl mt-3 text-white/80'>
-								Skip the boring, watch the essential. Powered by AI segment
-								ratings.
+								A chrome extension to skip the boring and watch the essential.
+								Powered by AI segmenting.
 							</p>
 							<SignedOut>
 								<SignInButton
@@ -56,10 +56,12 @@ export default function LandingPage() {
 							<SignedIn>
 								<SubscriptionButton />
 							</SignedIn>
-							<video
-								src='/img/demo.mp4'
-								className='w-full max-w-xl rounded-xl mt-10'
-								controls
+							<iframe
+								className='w-full max-w-xl rounded-xl mt-10 aspect-video'
+								src='https://www.youtube.com/embed/AMPg0rHN2vA'
+								title='ViewVolt Demo Video'
+								allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+								allowFullScreen
 							/>
 						</div>
 					</div>
