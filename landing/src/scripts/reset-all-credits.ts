@@ -1,6 +1,9 @@
-// Import using CommonJS syntax
-const { clerkClient } = require('@clerk/nextjs/server');
-require('dotenv').config();
+// Import using ES module syntax
+import { clerkClient } from '@clerk/nextjs/server';
+import * as dotenv from 'dotenv';
+
+// Initialize dotenv
+dotenv.config();
 
 // Define interface for credit usage tracking
 interface CreditUsage {
@@ -76,14 +79,17 @@ async function resetAllCredits() {
 }
 
 // Run the script if executed directly
-if (require.main === module) {
-	resetAllCredits()
-		.then(() => {
-			console.log('Script completed successfully');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('Script failed:', error);
-			process.exit(1);
-		});
-}
+// In ES modules, there's no direct equivalent to require.main === module
+// So we export the function and run it directly when needed
+export { resetAllCredits };
+
+// Execute the script
+resetAllCredits()
+	.then(() => {
+		console.log('Script completed successfully');
+		process.exit(0);
+	})
+	.catch((error) => {
+		console.error('Script failed:', error);
+		process.exit(1);
+	});
