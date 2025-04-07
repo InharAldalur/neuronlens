@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
+import { ExtensionAuthBridge } from '@/components/ExtensionAuthBridge';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 
@@ -22,7 +23,10 @@ export default function RootLayout({
 	return (
 		<ClerkProvider>
 			<html lang='en' className={`${poppins.variable}`}>
-				<body className='font-poppins'>{children}</body>
+				<body className='font-poppins'>
+					{children}
+					<ExtensionAuthBridge />
+				</body>
 			</html>
 		</ClerkProvider>
 	);

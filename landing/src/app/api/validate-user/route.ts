@@ -1,59 +1,113 @@
-// app/api/user-status/route.js
+// app/api/user-status/route.ts
 
 import { NextResponse, NextRequest } from 'next/server';
 import { clerkClient } from '@clerk/nextjs/server';
 
-// Define interface for credit usage tracking
-interface CreditUsage {
-	[key: string]: number;
+// --- Constants ---
+const FREE_CREDITS_PER_MONTH = 5;
+const PAID_CREDITS_PER_MONTH = 50; // New constant for paid users
+
+// --- Helper Functions ---
+function getStartOfNextMonthTimestamp(): number {
+	const now = new Date();
+	const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+	return nextMonth.getTime();
 }
 
+// --- API Route ---
 export async function POST(req: NextRequest) {
-	const { userId } = await req.json();
-	// Get the authenticated user's ID
+	const { userId, decrement = false } = await req.json();
 
 	if (!userId) {
-		// User is not authenticated
-		return NextResponse.json({ authenticated: false, paid: false });
+		// Not authenticated
+		return NextResponse.json({ hasCredits: false, creditsRemaining: 0 });
 	}
 
 	try {
-		// Fetch user data from Clerk
 		const user = await clerkClient.users.getUser(userId);
 
-		// Check if the user has paid
-		// Assuming you store payment status in publicMetadata
+		// 1. Determine Credit Limit based on Subscription Status
 		const hasActiveSubscription =
-			user.publicMetadata.hasActiveSubscription || false;
+			user.publicMetadata?.hasActiveSubscription === true;
+		const creditLimit = hasActiveSubscription
+			? PAID_CREDITS_PER_MONTH
+			: FREE_CREDITS_PER_MONTH;
 
-		// Get current month and year for tracking monthly usage
-		const now = new Date();
-		const currentMonth = now.getMonth();
-		const currentYear = now.getFullYear();
+		// 2. Handle Credits (Reset, Initialize, Get Current)
+		let credits = (user.privateMetadata?.credits as number) ?? null;
+		let resetTimestamp =
+			(user.privateMetadata?.creditResetTimestamp as number) ?? null;
+		const now = Date.now();
+		let metadataNeedsUpdate = false;
 
-		// Retrieve credit usage data from user metadata
-		const creditUsage = (user.publicMetadata.creditUsage as CreditUsage) || {};
-		const monthKey = `${currentYear}-${currentMonth}`;
-		const currentMonthUsage = creditUsage[monthKey] || 0;
-		const monthlyLimit = 5; // 5 free credits per month
+		// Initialize credits/timestamp if missing or reset if time has passed
+		if (resetTimestamp === null || now >= resetTimestamp) {
+			credits = creditLimit; // Use the determined credit limit
+			resetTimestamp = getStartOfNextMonthTimestamp();
+			metadataNeedsUpdate = true;
+			console.log(`User ${userId}: Credits reset/initialized to ${credits} (Limit: ${creditLimit}). Next reset: ${new Date(resetTimestamp).toISOString()}`);
+		}
 
-		// Check if user is within free usage limit
-		const withinFreeLimit = currentMonthUsage < monthlyLimit;
+		// Ensure credits are never null after potential reset/initialization (Fallback)
+		if (credits === null) {
+			credits = creditLimit; // Use the determined credit limit
+			if (resetTimestamp === null) resetTimestamp = getStartOfNextMonthTimestamp();
+			metadataNeedsUpdate = true;
+			console.log(`User ${userId}: Fallback - Initializing credits to ${credits} (Limit: ${creditLimit}).`);
+		}
 
+		let currentCredits = credits;
+		const hasEnoughCredits = currentCredits > 0;
+
+		// 3. Decrement credits if requested and available
+		if (decrement && hasEnoughCredits) {
+			currentCredits -= 1;
+			metadataNeedsUpdate = true;
+			console.log(`User ${userId}: Decrementing credit. Remaining: ${currentCredits}/${creditLimit}`);
+		}
+
+		// 4. Update Clerk metadata if needed
+		if (metadataNeedsUpdate) {
+			try {
+				await clerkClient.users.updateUserMetadata(userId, {
+					privateMetadata: {
+						...(user.privateMetadata || {}),
+						credits: currentCredits,
+						creditResetTimestamp: resetTimestamp,
+					},
+				});
+			} catch (updateError) {
+				console.error(`User ${userId}: Failed to update Clerk metadata:`, updateError);
+				// If decrement failed, return error
+				if (decrement && hasEnoughCredits) {
+					return NextResponse.json(
+						{
+							hasCredits: false,
+							creditsRemaining: credits, // Return original credits before failed decrement
+							error: 'Failed to update credits. Please try again.',
+						},
+						{ status: 500 }
+					);
+				}
+				// Log other update errors but proceed if possible
+			}
+		}
+
+		// 5. Return status
+		const finalHasCredits = currentCredits > 0;
 		return NextResponse.json({
-			authenticated: true,
-			paid: hasActiveSubscription,
-			freeUsage: {
-				withinLimit: withinFreeLimit || hasActiveSubscription,
-				used: currentMonthUsage,
-				limit: monthlyLimit,
-				remaining: Math.max(0, monthlyLimit - currentMonthUsage),
-			},
+			hasCredits: finalHasCredits,
+			creditsRemaining: currentCredits,
 		});
+
 	} catch (error) {
-		console.error('Error fetching user data:', error);
+		console.error(`User ${userId}: Error fetching user data or processing credits:`, error);
 		return NextResponse.json(
-			{ authenticated: false, paid: false, error: 'Unable to fetch user data' },
+			{
+				hasCredits: false,
+				creditsRemaining: 0,
+				error: 'Unable to validate user status',
+			},
 			{ status: 500 }
 		);
 	}
