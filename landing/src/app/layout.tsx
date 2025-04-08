@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
-import { ExtensionAuthBridge } from '@/components/ExtensionAuthBridge';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
+import ExtensionAuthBridge from '../components/ExtensionAuthBridge';
 
 const poppins = Poppins({
 	subsets: ['latin'],
